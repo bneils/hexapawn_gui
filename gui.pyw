@@ -285,7 +285,10 @@ class GUI:
             pygame.display.flip()
 
     def gameover(self):
-        ### TODO: Draw rain/confetti effects
+        """Show the game over screen. Either rain or confetti will be created
+        depending on who wins."""
+        if self.winner == H:
+            self.bot.inform_lost()
         
         self.gameover_box = pygui.elements.UITextBox(
             html_text="Congratulations, you won!" if self.winner == H else "Sorry, you've been outsmarted by the bot. Good luck next time.",

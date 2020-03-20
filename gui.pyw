@@ -8,8 +8,13 @@ from math import sin, pi, ceil, exp
 from time import time
 from webbrowser import open as open_website
 from random import randint, random
+import ctypes
 
 pygame.init()
+
+# Author: Ben Neilsen
+# Last edited: 3/20/20
+
 
 
 class Pawn(pygame.sprite.Sprite):
@@ -123,7 +128,8 @@ class GUI:
         self.transparent_yellow_squares = [self.im_set_alpha(self.yellow_square, alpha) for alpha in range(32, 96)]
         self.transparent_yellow_pawns   = [self.im_set_alpha(self.yellow_pawn,   alpha) for alpha in range(32, 96)]
 
-        self.current_preset = ""
+        default_sessions = [p for p in self.get_bot_presets() if p.endswith("\\default_session.p")]
+        self.current_preset = default_sessions[0] if default_sessions else ""
         self.can_click = True
         self.is_clicking = False
         
@@ -200,6 +206,15 @@ class GUI:
                 elif event.user_type == pygui.UI_TEXT_BOX_LINK_CLICKED:
                     open_website(event.link_target, new=2)
 
+    def get_bot_presets(self):
+        """Retrieve all file paths that end in .p"""
+        presets = []
+        for root_dir, dirs, files in os.walk("."):
+            presets.extend([root_dir + "\\" + f for f in files if f.endswith(".p")])
+        
+        return presets
+
+
     def settings(self):
         """The GUI's settings interface."""
 
@@ -227,9 +242,7 @@ class GUI:
                                                     relative_rect=pygame.Rect(self.width // 2 - 250//2, self.height // 3 - self.height // 20 - 20, 250, 40))
 
         # Discover all files in the current directory and subdirectories that end in .p
-        presets = [""]
-        for root_dir, dirs, files in os.walk("."):
-            presets.extend([root_dir + "\\" + f for f in files if f.endswith(".p")])
+        presets = [""] + self.get_bot_presets()
 
         # If what the user selected then doesn't exist now, purge it
         for path in presets:
@@ -357,7 +370,7 @@ class GUI:
                     pass
                 finally:
                     if not self.current_preset:
-                        self.current_preset = "default_session.p"
+                        self.current_preset = ".\\default_session.p"
 
                 return func
             
@@ -580,6 +593,7 @@ class GUI:
         func = self.menu
         while True:
             func = func()   # Func modifies itself in between screen switching
+
 
 gui = GUI()
 gui.run()

@@ -2,19 +2,14 @@ import pygame
 import pygame_gui as pygui
 
 from core import *
-import os
+from os import walk
 import pickle
-from math import sin, pi, ceil, exp
+from math import sin, ceil, exp
 from time import time
 from webbrowser import open as open_website
 from random import randint, random
-import ctypes
 
 pygame.init()
-
-# Author: Ben Neilsen
-# Last edited: 3/20/20
-
 
 
 class Pawn(pygame.sprite.Sprite):
@@ -98,7 +93,6 @@ class GUI:
 
         self.manager = pygui.UIManager(self.display_surf.get_size())
         self.manager.add_font_paths("fira_code", "D:\\AP Create Task\\themes\\FiraCode-Regular.ttf", "D:\\AP Create Task\\themes\\FiraCode-Bold.ttf")
-        self.manager.add_font_paths("menlo", "D:\\AP Create Task\\themes\\Menlo.ttf")
         self.manager.preload_fonts([
             {"name": "fira_code", "point_size": 14, 'style': 'bold'},
             {"name": "fira_code", "point_size": 14, 'style': 'italic'},
@@ -136,6 +130,7 @@ class GUI:
         self.title_btn = self.settings_btn = self.back_btn = self.gameover_btn = None
 
     def im_set_alpha(self, surface, alpha):
+    
         """A better form of .set_alpha() that allows you to have per pixel opacity. Returns a new surface with that new opacity."""
         new_surf = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
         new_surf.blit(surface, (0, 0))
@@ -145,6 +140,7 @@ class GUI:
 
         new_surf.blit(alpha_img, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)  # "Blending" won't affect RGB (b/c any channel x1 is unchanged), but the
                                                                                 # alpha channel will be.
+        
         return new_surf
 
     def check_events(self):
@@ -209,7 +205,7 @@ class GUI:
     def get_bot_presets(self):
         """Retrieve all file paths that end in .p"""
         presets = []
-        for root_dir, dirs, files in os.walk("."):
+        for root_dir, dirs, files in walk("."):
             presets.extend([root_dir + "\\" + f for f in files if f.endswith(".p")])
         
         return presets
@@ -432,7 +428,7 @@ class GUI:
             if func:
                 return func
 
-            self.clock.tick(self.fps) / 1000
+            self.clock.tick(self.fps)
             mouse_pos = pygame.mouse.get_pos()
 
             player_made_move = False
@@ -505,8 +501,7 @@ class GUI:
                 self.winner = win_check(board, H)
                 if self.winner:
                     return self.gameover
-                    
-            
+
                 dead_pawn, vector = self.bot.make_turn(board)
                 
                 if vector:

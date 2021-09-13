@@ -2,7 +2,7 @@ import pygame
 import pygame_gui as pygui
 
 from core import *
-from os import walk
+from os import walk, path
 import pickle
 from math import sin, ceil, exp
 from time import time
@@ -89,32 +89,32 @@ class GUI:
     def __init__(self):
         self.display_surf = pygame.display.set_mode((500, 500))
         pygame.display.set_caption("Hexapawn")
-        pygame.display.set_icon(pygame.image.load('images/icon.png'))
+        pygame.display.set_icon(pygame.image.load(path.join("images", "icon.png")))
 
         self.manager = pygui.UIManager(self.display_surf.get_size())
-        self.manager.add_font_paths("fira_code", "D:\\AP Create Task\\themes\\FiraCode-Regular.ttf", "D:\\AP Create Task\\themes\\FiraCode-Bold.ttf")
+        self.manager.add_font_paths("fira_code", path.join("themes", "FiraCode-Regular.ttf"), path.join("themes", "FiraCode-Bold.ttf"))
         self.manager.preload_fonts([
-            {"name": "fira_code", "point_size": 14, 'style': 'bold'},
-            {"name": "fira_code", "point_size": 14, 'style': 'italic'},
-            {"name": "fira_code", "point_size": 10, 'style': 'regular'}
+            {"name": "fira_code", "point_size": 14, "style": "bold"},
+            {"name": "fira_code", "point_size": 14, "style": "italic"},
+            {"name": "fira_code", "point_size": 10, "style": "regular"}
         ])
 
         self.clock = pygame.time.Clock()
         self.fps = 60
 
-        # Syntactic sugar
+        # Convenience
         self.width, self.height = self.display_surf.get_size()
         self.tile_width, self.tile_height = ceil(self.width / 3), ceil(self.height / 3)
         self.tile_size = (self.tile_width, self.tile_height)
 
         # Load important images
-        self.tiles_image = pygame.transform.scale(pygame.image.load('images/tiles.png'), self.display_surf.get_size())
-        self.blue_pawn = pygame.transform.scale(pygame.image.load('images/blue_pawn.png'), self.tile_size)
-        self.red_pawn = pygame.transform.scale(pygame.image.load('images/red_pawn.png'), self.tile_size)
+        self.tiles_image = pygame.transform.scale(pygame.image.load(path.join("images", "tiles.png")), self.display_surf.get_size())
+        self.blue_pawn = pygame.transform.scale(pygame.image.load(path.join("images", "blue_pawn.png")), self.tile_size)
+        self.red_pawn = pygame.transform.scale(pygame.image.load(path.join("images", "red_pawn.png")), self.tile_size)
 
 
         # Prepare the images for pawn and tile highlighting masks
-        self.yellow_pawn = pygame.transform.scale(pygame.image.load('images/yellow_pawn.png'), self.tile_size)
+        self.yellow_pawn = pygame.transform.scale(pygame.image.load(path.join("images", "yellow_pawn.png")), self.tile_size)
         self.yellow_square = pygame.surface.Surface(self.tile_size)
         self.yellow_square.fill((255, 255, 102))
 
@@ -122,7 +122,7 @@ class GUI:
         self.transparent_yellow_squares = [self.im_set_alpha(self.yellow_square, alpha) for alpha in range(32, 96)]
         self.transparent_yellow_pawns   = [self.im_set_alpha(self.yellow_pawn,   alpha) for alpha in range(32, 96)]
 
-        default_sessions = [p for p in self.get_bot_presets() if p.endswith("\\default_session.p")]
+        default_sessions = [p for p in self.get_bot_presets() if p.endswith(path.sep + "default_session.p")]
         self.current_preset = default_sessions[0] if default_sessions else ""
         self.can_click = True
         self.is_clicking = False
@@ -140,7 +140,6 @@ class GUI:
 
         new_surf.blit(alpha_img, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)  # "Blending" won't affect RGB (b/c any channel x1 is unchanged), but the
                                                                                 # alpha channel will be.
-        
         return new_surf
 
     def check_events(self):
@@ -206,7 +205,7 @@ class GUI:
         """Retrieve all file paths that end in .p"""
         presets = []
         for root_dir, dirs, files in walk("."):
-            presets.extend([root_dir + "\\" + f for f in files if f.endswith(".p")])
+            presets.extend([path.join(root_dir, fp) for fp in files if fp.endswith(".p")])
         
         return presets
 
@@ -360,13 +359,13 @@ class GUI:
             if func:
                 # Save the pickle data if the player selected a preset.
                 try:
-                    with open(self.current_preset if self.current_preset else "default_session.p", 'wb') as f:
+                    with open(self.current_preset if self.current_preset else "default_session.p", "wb") as f:
                         pickle.dump(self.bot, f)
                 except pickle.PickleError as e:
                     pass
                 finally:
                     if not self.current_preset:
-                        self.current_preset = ".\\default_session.p"
+                        self.current_preset = path.join(".", "default_session.p")
 
                 return func
             
@@ -386,7 +385,7 @@ class GUI:
         # Load the bot preset with pickle
         if self.current_preset:
             try:
-                with open(self.current_preset, 'rb') as f:
+                with open(self.current_preset, "rb") as f:
                     self.bot = pickle.load(f)
             except (FileNotFoundError, pickle.PickleError, TypeError, EOFError) as e:
                 # Make a UI popup to display that it failed.
@@ -396,10 +395,10 @@ class GUI:
                     error_message = "The file you're trying to load contains data in an <b>invalid format</b>. Only load files that were generated by this script!"
 
                 popup = pygui.windows.ui_message_window.UIMessageWindow(
-                                            message_window_rect=
+                                            rect=
                                                 pygame.Rect(self.width // 2 - self.width // 4, self.height // 2 - self.height // 4,
                                                             self.width // 2, self.height // 2),
-                                            message_title="Error loading bot preset.",
+                                            window_title="Error loading bot preset.",
                                             html_message=error_message,
                                             manager=self.manager)
                 self.current_preset = ""
